@@ -1,16 +1,16 @@
 # datagen.py generates data following spec of the Wisconsin Benchmark Paper
 # run: datagen.py -m 10000 to generate a TENKTUP
 
-import argparse
+from sys import argv
 import random
 import copy
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--maxtuples', type=int, required=True, help="outputs maxtuples to stdout")
-    args = parser.parse_args()
+    if len(argv) < 2:
+        usage("python3 datagen.py (MAXTUPLES)")
+        exit();
 
-    MAX = args.maxtuples
+    MAX = int(argv[1])
 
     # unique2 0-(MAXTUPLES-1) sequential unique, sequential
     unique2 = range(MAX)
@@ -56,5 +56,7 @@ if __name__ == "__main__":
     # TODO string4 - cyclic
 
     # TODO add stringu1, stringu2, string4 to zip
-    tup = list(zip(unique1, unique2, two, four, ten, twenty, onePercent, tenPercent, twentyPercent, fiftyPercent, unique3, evenOnePercent, oddOnePercent))
-    print(*tup, sep='\n')
+    tuples = list(zip(unique1, unique2, two, four, ten, twenty, onePercent, tenPercent, twentyPercent, fiftyPercent, unique3, evenOnePercent, oddOnePercent))
+    print("unique1,unique2,two,four,ten,twenty,onePercent,tenPercent,twentyPercent,fiftyPercent,unique3,evenOnePercent,oddOnePercent")
+    for tup in tuples:
+        print(*tup, sep=',')
