@@ -62,6 +62,7 @@ def insert_csv(table, filename, connection):
                 int(row[8]), int(row[9]), int(row[10]), int(row[11]), int(row[12]), row[13], row[14], row[15] ) )
                 connection.commit()
             
+            # 'cursor.executemany()' would be faster
 
 if __name__ == "__main__":
     if len(argv) < 2:

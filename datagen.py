@@ -50,7 +50,6 @@ if __name__ == "__main__":
     tuples = list(zip(unique1, unique2, two, four, ten, twenty, \
                         onePercent, tenPercent, twentyPercent, fiftyPercent, \
                         unique3, evenOnePercent, oddOnePercent, stringu1, stringu2, string4))
-    print("""unique1,unique2,two,four,ten,twenty,onePercent,tenPercent,twentyPercent,fiftyPercent,
-                unique3,evenOnePercent,oddOnePercent,stringu1,stringu2,string4")
+    print("unique1,unique2,two,four,ten,twenty,onePercent,tenPercent,twentyPercent,fiftyPercent,unique3,evenOnePercent,oddOnePercent,stringu1,stringu2,string4")
     for tup in tuples:
         print(*tup, sep=',')
