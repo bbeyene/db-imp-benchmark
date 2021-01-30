@@ -1,5 +1,9 @@
-# mysqlinsert.py inserts data from given file into MySQL databse
-# run: mysqlinsert.py (file) to insert a csv file of tuples 
+# mysqlinsert.py creates databases and tables, 
+#                inserts csv from given file into MySQL database
+#
+# replace host = <instance-ip>
+# run: mysqlinsert.py (file)
+#
 # https://realpython.com/python-mysql/
 
 from sys import argv
@@ -7,18 +11,23 @@ import csv
 from getpass import getpass
 from mysql.connector import connect, Error
 
-def create_database(connection):
+def create_database(name, connection):
     with connection.cursor() as cursor:
-        create_db_query = "CREATE DATABASE Benchmark_Data"
+        create_db_query = f"CREATE DATABASE {name}"
         cursor.execute(create_db_query)
-        use_db_query = "USE Benchmark_Data"
+        use_db_query = f"USE {name}"
         cursor.execute(use_db_query)
         connection.commit()
 
-def create_table(connection):
+def use_database(name, connection):
     with connection.cursor() as cursor:
-        create_table_query = """
-        CREATE TABLE ONEKTUP (
+        use_db_query = f"USE {name}"
+        cursor.execute(use_db_query)
+
+def create_table(name, connection):
+    with connection.cursor() as cursor:
+        create_table_query = f"""
+        CREATE TABLE {name} (
         unique1 INT NOT NULL,
         unique2 INT PRIMARY KEY,
         two INT NOT NULL,
@@ -39,6 +48,20 @@ def create_table(connection):
         cursor.execute(create_table_query)
         connection.commit()
 
+def insert_csv(table, filename, connection):
+    with connection.cursor() as cursor:
+        with open(filename) as csv_file: 
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            header = next(csv_reader)
+            for row in csv_reader:
+                cursor.execute(f"""INSERT INTO {table} (
+                unique1,unique2,two,four,ten,twenty,onePercent,tenPercent,
+                twentyPercent,fiftyPercent,unique3,evenOnePercent,oddOnePercent,stringu1,stringu2,string4)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s )""", 
+                ( int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4]), int(row[5]), int(row[6]), int(row[7]), \
+                int(row[8]), int(row[9]), int(row[10]), int(row[11]), int(row[12]), row[13], row[14], row[15] ) )
+                connection.commit()
+            
 
 if __name__ == "__main__":
     if len(argv) < 2:
@@ -50,18 +73,15 @@ if __name__ == "__main__":
     # https://realpython.com/python-mysql/
     try:
         with connect(
-            host='see gcp sql instance ip',
+            host='', # gcp sql instance ip
             user='root',
             password=getpass("password: "),
         ) as connection:
-            create_database(connection)
-            create_table(connection)
+            create_database('Benchmark_Data', connection)
+            use_database('Benchmark_Data', connection)
+            create_table('ONEKTUP', connection)
+            insert_csv('ONEKTUP', filename, connection)
     except Error as e:
         print(e)
 
 
-    with open(filename) as csv_file: 
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for row in csv_reader:
-            print("insert row", row)
-            
