@@ -39,17 +39,37 @@ if __name__ == "__main__":
     # oddOnePercent 1,3,5,...,199 random (onePercent * 2)+1
     oddOnePercent = list(2 * one + 1 for one in onePercent)
 
+    # Letters for strings
+    a = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+        'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V']
+
+    # String 4 List
+    s4_list = [
+                    "AAAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    "HHHHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    "OOOOxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    "VVVVxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                ]
+
+    # Strings Lists
+    stringu1 = []
+    stringu2 = []
+    stringu4 = []
+
     # TODO stringu1 - random candidate key
-    stringu1 = ['a'] * MAX
+    stringu1 = list([letter[i] + x * 25 + letter[0] + x * 22 + letter[0]] * MAX
     # TODO stringu2 - random candidate key
-    stringu2 = ['b'] * MAX
+    stringu2=['b'] * MAX
+
     # TODO string4 - cyclic
-    string4 = ['c'] * MAX
+    for x in range(0, MAX - 1):
+        stringu4.append(s4_list[x % len(s4_list)])
 
     # TODO add stringu1, stringu2, string4 to zip
-    tuples = list(zip(unique1, unique2, two, four, ten, twenty, \
+    tuples=list(zip(unique1, unique2, two, four, ten, twenty, \
                         onePercent, tenPercent, twentyPercent, fiftyPercent, \
                         unique3, evenOnePercent, oddOnePercent, stringu1, stringu2, string4))
+
     print("unique1,unique2,two,four,ten,twenty,onePercent,tenPercent,twentyPercent,fiftyPercent,unique3,evenOnePercent,oddOnePercent,stringu1,stringu2,string4")
     for tup in tuples:
         print(*tup, sep=',')
