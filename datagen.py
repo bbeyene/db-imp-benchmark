@@ -8,7 +8,7 @@ import copy
 if __name__ == "__main__":
     if len(argv) < 2:
         usage("python3 datagen.py (MAXTUPLES)")
-        exit();
+        exit()
 
     MAX = int(argv[1])
 
@@ -39,17 +39,57 @@ if __name__ == "__main__":
     # oddOnePercent 1,3,5,...,199 random (onePercent * 2)+1
     oddOnePercent = list(2 * one + 1 for one in onePercent)
 
-    # TODO stringu1 - random candidate key
-    stringu1 = ['a'] * MAX
-    # TODO stringu2 - random candidate key
-    stringu2 = ['b'] * MAX
-    # TODO string4 - cyclic
-    string4 = ['c'] * MAX
+    # Letters for strings
+    a = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+         'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V']
+
+    # String 4 List
+    s4_list = [
+        "AAAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "HHHHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "OOOOxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "VVVVxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    ]
+
+    # Strings Lists
+    stringu1 = []
+    stringu2 = []
+    string4 = []
+
+    ###### Generate Strings #####
+    for x in range(0, MAX - 1):
+        # stringu1 - random candidate key ($$$$$$$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
+        stringu1.append(
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            'x' * 45
+        )
+
+        # stringu2 - random candidate key ($$$$$$$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
+        stringu2.append(
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            a[unique1[random.randint(0, MAX - 1 % len(a))]] +
+            'x' * 45
+        )
+
+        # stringu2 - Cyclic
+        string4.append(s4_list[x % len(s4_list)])
 
     # TODO add stringu1, stringu2, string4 to zip
-    tuples = list(zip(unique1, unique2, two, four, ten, twenty, \
-                        onePercent, tenPercent, twentyPercent, fiftyPercent, \
-                        unique3, evenOnePercent, oddOnePercent, stringu1, stringu2, string4))
+    tuples = list(zip(unique1, unique2, two, four, ten, twenty,
+                      onePercent, tenPercent, twentyPercent, fiftyPercent,
+                      unique3, evenOnePercent, oddOnePercent, stringu1, stringu2, string4))
+
     print("unique1,unique2,two,four,ten,twenty,onePercent,tenPercent,twentyPercent,fiftyPercent,unique3,evenOnePercent,oddOnePercent,stringu1,stringu2,string4")
     for tup in tuples:
         print(*tup, sep=',')
