@@ -20,7 +20,11 @@ To host the database, we went the cloud route. Additionally, using a virtual mac
 
 ## Data Generation
 
+say something here
+
 ## Demonstration
+
+say something here
 
 ## Lessons Learned
 
@@ -30,8 +34,10 @@ In developing the data generation script, we had some issues creating the string
 
 Earlier versions of the script used the string format of the early Wisconsin Benchmark. If I had read just a few more pages of the document, I would have realized the string format was updated in a later version of the Benchmark.
 
-I ended up wracking my brain trying to figure out how to implement the $ + 25 x's + $ + 24 x's + $ algorithm. I spent too many hours staring at nested while loops. Losing track of several variables and perhaps 2% of my sanity (I'm being dramatic).
+I ended up wracking my brain trying to figure out how to implement the algorithm to generate the string pattern. I spent too many hours staring at nested while loops. Losing track of several variables and perhaps 2% of my sanity (I'm being dramatic).
 
-Luckily I met with Bruh the next day. He pointed up the updated string format - $$$$$$$ + 45 x's. In a fraction of the time troubleshooting my previous code, I sucessfully implemented the updated string aglorithm for stringu1 and stringu2. string4 was trivial.
+Luckily I met with Bruh the next day. He pointed out the updated string format - (7 letters [A-Z] followed by 45 x's) and generation pattern.
+
+In a fraction of the time troubleshooting my previous code, I sucessfully implemented the updated string aglorithm for stringu1 and stringu2. string4 was trivial.
 
 Long story short: read the whole document before you program!
