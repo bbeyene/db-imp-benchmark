@@ -8,13 +8,17 @@ Hello from Bruh and Michael. We are computer science students at Portland State 
 
 For the project, we will implement a relational database system. The system will then be put through a grinder. Testing how the system performs with datasets of various sizes. And testing how the system performs when we tweak its settings.
 
-## Data Generation
-
 ## System
 
-The system we have chosen is MySQL. MySQL has been around for 25+ years and has been crowned as the world's most popular DBMS (source)
+The system we have chosen is MySQL.
 
-So it is imperative that two CS students near graduation should gain intimate knowledge of such ubiquitious system.
+MySQL has been around for 25+ years and has been crowned as the world's most popular DBMS. [source](https://community.idera.com/database-tools/blog/b/community_blog/posts/why-is-mysql-so-popular#:~:text=MySQL%20has%20emerged%20as%20the,such%20as%20MongoDB%20and%20PostgreSQL.)
+
+So it would be an utmost priority for two CS students, near graduation, to gain intimate knowledge and experience with such ubiquitious system.
+
+To host the database, we went the cloud route. Additionally, using a virtual machine would grant us that sweet sweet extra credit. As a result, our database lives in Google Cloud Console.
+
+## Data Generation
 
 ## Demonstration
 
