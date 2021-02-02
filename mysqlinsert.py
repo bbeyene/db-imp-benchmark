@@ -15,8 +15,6 @@ def create_database(name, connection):
     with connection.cursor() as cursor:
         create_db_query = f"CREATE DATABASE {name}"
         cursor.execute(create_db_query)
-        use_db_query = f"USE {name}"
-        cursor.execute(use_db_query)
         connection.commit()
 
 def use_database(name, connection):
@@ -52,6 +50,7 @@ def insert_csv(table, filename, connection):
     with connection.cursor() as cursor:
         with open(filename) as csv_file:
             csv_data = csv.reader(csv_file)
+            next(csv_data, None)  # skip the headers
             list_data = []
             for row in csv_data:
                 list_data.append(tuple(row))
@@ -66,7 +65,7 @@ def insert_csv(table, filename, connection):
 if __name__ == "__main__":
     if len(argv) < 2:
         usage("python3 mysqlinsert.py (file.csv)")
-        exit();
+        exit()
     
     filename = argv[1]
 
@@ -77,10 +76,10 @@ if __name__ == "__main__":
             user='root',
             password=getpass("password: "),
         ) as connection:
-            create_database('Benchmark_Data', connection)
-            use_database('Benchmark_Data', connection)
-            create_table('ONEKTUP', connection)
-            insert_csv('ONEKTUP', filename, connection)
+            #create_database('Benchmark', connection)
+            use_database('Benchmark', connection)
+            create_table('TENKTUP2', connection)
+            insert_csv('TENKTUP2', filename, connection)
     except Error as e:
         print(e)
 
