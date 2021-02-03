@@ -4,9 +4,9 @@ MySQL implementation and benchmarking
 
 ## Introduction
 
-Hello from Bruh and Michael. We are computer science students at Portland State University. This repository contains our CS 4/585 Database Implementation Project.
+Hello from Bruh and Michael. We are computer science students at Portland State University. This repository contains our CS 4/587 Database Implementation Project.
 
-For the project, we will implement a relational database system. The system will then be put through a grinder. Testing how the system performs with datasets of various sizes. And testing how the system performs when we tweak its settings.
+For the project, we will implement a schema and benchmark a relational database system. The system will then be put through a grinder. Testing how the system performs with datasets of various sizes. And testing how the system performs when we tweak its settings.
 
 ## System
 
@@ -16,15 +16,39 @@ MySQL has been around for 25+ years and has been crowned as the world's most pop
 
 So it would be an utmost priority for two CS students, near graduation, to gain intimate knowledge and experience with such ubiquitious system.
 
-To host the database, we went the cloud route. Additionally, using a virtual machine would grant us that sweet sweet extra credit. As a result, our database lives in Google Cloud Console.
+To host the database, we went the cloud route. Additionally, using a virtual machine would grant us that sweet sweet extra credit. As a result, our database lives in Google Cloud Platform.
 
+![GCP MySQL instance](./screenshots/mysql1.PNG)
 ## Data Generation
 
-say something here
+How our script creates the tuples ...  
 
+![calling datagen.py](./screenshots/datagen1.PNG)  
+
+The ONEKTUP ...  
+
+![datagen.py output 1](./screenshots/datagen2.PNG)  
+
+The TENKTUP1 and TENKTUP2 ...  
+![datagen.py output 2](./screenshots/datagen3.PNG)  
+![datagen.py output 3](./screenshots/datagen4.PNG)  
 ## Demonstration
 
-say something here
+Calling the create/insert script ...  
+
+![mysqlinsert.py run](./screenshots/insert1.PNG)  
+
+Changing params for each table ...  
+![mysqlinsert.py code](./screenshots/insert2.PNG)  
+
+
+Our tables loaded-in ...  
+![GCP MySQL database and tables](./screenshots/mysql2.PNG)  
+
+4 out of 16 of ONEKTUP's columns...  
+![GCP MySQL ONEKTUP 1](./screenshots/mysql3.PNG)  
+![GCP MySQL ONEKTUP 2](./screenshots/mysql4.PNG)  
+
 
 ## Lessons Learned
 
