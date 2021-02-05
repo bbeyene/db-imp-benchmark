@@ -10,7 +10,7 @@ The system we have chosen is MySQL.
 
 MySQL has been around for 25+ years and has been crowned as the world's most popular DBMS. [source](https://community.idera.com/database-tools/blog/b/community_blog/posts/why-is-mysql-so-popular#:~:text=MySQL%20has%20emerged%20as%20the,such%20as%20MongoDB%20and%20PostgreSQL.)
 
-So it would be an utmost priority for two CS students, near graduation, to gain intimate knowledge and experience with such ubiquitious system.
+So it would be an utmost priority for two CS students, near graduation, to gain intimate knowledge and experience with such a ubiquitous system.
 
 To host the database, we went the cloud route. Additionally, using a virtual machine would grant us that sweet sweet extra credit. As a result, our database lives in Google Cloud Platform.
 
@@ -19,9 +19,9 @@ figure 1.
 
 ## Data Generation
 
-To generate useable and scalable data, we followed the guidelines for the Winconsin benchmark.
+To generate usable and scalable data, we followed the guidelines for the Wisconsin benchmark.
 
-The guidelines call for a relation with 16 attributes. 3 0f which are strings and the rest integers. Of the integers, 2 are randomly-generated keys, and the rest are cyclicly-generated numbers from specific ranges. Of the strings, stringu1 and stringu2 are randomly generated based on the first key. string4 is cyclicly generated.
+The guidelines call for a relation with 16 attributes. 3 0f which are strings and the rest integers. Of the integers, 2 are randomly-generated keys, and the rest are cyclically-generated numbers from specific ranges. Of the strings, stringu1 and stringu2 are randomly generated based on the first key. string4 is cyclically generated.
 
 datagen.py can generate a specified number of tuples using the following format: python3 datagen.py (no_of_tuples).
 
