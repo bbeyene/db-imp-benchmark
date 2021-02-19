@@ -1,29 +1,26 @@
 # Part 2
 
 ## System Research
-.  
-.  
-.  
+
+1. _Storage Engines._ According to the official docs, "the choice of a transactional storage engine such as InnoDB or a nontransactional one such as MyISAM can be very important for performance and scalability." By default, the storage engine for new tables is InnoDB. It claims that InnoDB tables "outperform the simpler MyISAM tables, especially for a busy database." MyISAM has a small footprint and does table-level locking which reduces performances (relative to InnoDB) so "it is often used in read-only or read-mostly workloads in Web and data warehousing configurations." InnoDB tables arrange data using primary keys. Each table's primary key used to create a clustered index so that I/O is reduced when using the primary key. InnoDB tables also use "Adaptive Hash Indexing" to make lookups of frequently accessed rows faster (which we also benchmark). The documentation also states, you can create and drop indexes and perform other DDL operations with much less impact on performance and availability." InnoDB tables were "designed for CPU efficiency and maximum performance when processing large data volumes".
+
+    Truncated Table 16.1 from MySQL docs: Storage Engines Features 
+    | Feature | MyISAM | InnoDB |
+    | :--- | :---: | :---: |
+    | B-tree indexes | Yes | Yes |
+    Clustered indexes | No | Yes |
+    | Data caches | No | Yes |
+    | Foreign key support | No | Yes |
+    Hash indexes | No | No |
+    Index caches | Yes | Yes |
+    Locking granularity | Table | Row |
+    Storage limits | 256TB | 64TB |
+    Transactions | No | Yes |
+
+2. _
+
 ## Performance Experiment Design 1
-
-### Performance issue test: different storage engines - InnoDB vs. MyISAM
-
-According to the official docs, "the choice of a transactional storage engine such as InnoDB or a nontransactional one such as MyISAM can be very important for performance and scalability." By default, the storage engine for new tables is InnoDB. It claims that InnoDB tables "outperform the simpler MyISAM tables, especially for a busy database." MyISAM has a small footprint and does table-level locking which reduces performances (relative to InnoDB) so "it is often used in read-only or read-mostly workloads in Web and data warehousing configurations." InnoDB tables arrange data using primary keys. Each table's primary key used to create a clustered index so that I/O is reduced when using the primary key. InnoDB tables also use "Adaptive Hash Indexing" to make lookups of frequently accessed rows faster (which we also benchmark). The documentation also states, you can create and drop indexes and perform other DDL operations with much less impact on performance and availability." Since InnoDB tables were "designed for CPU efficiency and maximum performance when processing large data volumes" - we will consider different sizes and calculate what "large" means. Since we don't want to be bottlenecked by disk write speeds, we will turn off 'autocommit', and instead group related commands sandwiched between a 'BEGIN TRANSACTION' and 'COMMIT'. 
-
-Truncated Table 16.1 from MySQL docs: Storage Engines Features 
-| Feature | MyISAM | InnoDB |
-| :--- | :---: | :---: |
-| B-tree indexes | Yes | Yes |
-Clustered indexes | No | Yes |
-| Data caches | No | Yes |
-| Foreign key support | No | Yes |
-Hash indexes | No | No |
-Index caches | Yes | Yes |
-Locking granularity | Table | Row |
-Storage limits | 256TB | 64TB |
-Transactions | No | Yes |
-
-
+### Performance issue test: comparing read/write performance of two storage engines - InnoDB and MyISAM.
 ### Data sets included in the test 
 We'll use TENKTUP1 and execute 'read-only' and 'write-only' queries using parallel connections that simulates 4 concurrent users.
 - User 1: read then write
@@ -32,6 +29,7 @@ We'll use TENKTUP1 and execute 'read-only' and 'write-only' queries using parall
 - User 4: write then read 
 
 ### Queries we will run
+Since we don't want to be bottlenecked by disk write speeds, we will turn off 'autocommit', and instead group related commands sandwiched between a 'BEGIN TRANSACTION' and 'COMMIT'. 
 Enable profiling to see execution time: `SET profiling = 1;`
 Four concurrent read/write processes using 10% selection
 ```
