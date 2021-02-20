@@ -8,19 +8,22 @@
     | Feature | MyISAM | InnoDB |
     | :--- | :---: | :---: |
     | B-tree indexes | Yes | Yes |
-    Clustered indexes | No | Yes |
+    | Clustered indexes | No | Yes |
     | Data caches | No | Yes |
     | Foreign key support | No | Yes |
-    Hash indexes | No | No |
-    Index caches | Yes | Yes |
-    Locking granularity | Table | Row |
-    Storage limits | 256TB | 64TB |
-    Transactions | No | Yes |
+    | Hash indexes | No | No |
+    | Index caches | Yes | Yes |
+    | Locking granularity | Table | Row |
+    | Storage limits | 256TB | 64TB |
+    | Transactions | No | Yes |
 
-2. _
+2. _Index Condition Pushdown._ The most frequently used storage engine is InnoDB - when a primary-key is specified, rows are inserted ordered according to the primary-key and a clustered index is created and entire rows can be read in quickly. Index Condition Pushdown (ICP) is an optimization setting that can be toggled for use when a secondary index is created. If it is toggled off, "the storage engine traverses the (secondary) index to locate rows" and "returns them to the MySQL server which evaluates the WHERE condition for the rows." If enabled, and the WHERE condition in the query only needs the indexed column, then it can push it to the storage engine which evaluates the condition using the index entry "and only if this is satisfied is the row read from the table." This makes queries that use only the secondary index column more performant.
 
+3. _
+  
 ## Performance Experiment Design 1
-### Performance issue test: comparing read/write performance of two storage engines - InnoDB and MyISAM.
+### Performance issue test
+Comparing read and write performance of two storage engines - InnoDB and MyISAM.
 ### Data sets included in the test 
 We'll use TENKTUP1 and execute 'read-only' and 'write-only' queries using parallel connections that simulates 4 concurrent users.
 - User 1: read then write
@@ -29,22 +32,21 @@ We'll use TENKTUP1 and execute 'read-only' and 'write-only' queries using parall
 - User 4: write then read 
 
 ### Queries we will run
-Since we don't want to be bottlenecked by disk write speeds, we will turn off 'autocommit', and instead group related commands sandwiched between a 'BEGIN TRANSACTION' and 'COMMIT'. 
-Enable profiling to see execution time: `SET profiling = 1;`
-Four concurrent read/write processes using 10% selection
+Four concurrent read/write processes using 10% selection with no index:
 ```
 SELECT count(*) FROM TENKTUP1
-WHERE unique2 BETWEEN 0 AND 999
+WHERE tenPercent = 0
 
 UPDATE TENKTUP1
 SET string4 = 'x' where tenPercent = 0
 ```
-Get query id from `SHOW PROFILES;`
+Get `query_id` from `SHOW PROFILES;`
 Get query time from `SHOW PROFILE FOR QUERY <id>`
 
 ### Parameters used for this test and how the parameters will be set/varied
+Enable profiling to see execution time: `SET profiling = 1;`
+Disable `AUTOCOMMIT`
 The command `SHOW ENGINES` tells us that the default engine is InnoDB, so to use other engines - we must specify explicitly. We'll create two tables: `CREATE TABLE ... ENGINE=InnoDB` and `CREATE TABLE ... ENGINE=MYISAM`
-(Turn off AUTOCOMMIT)
 To verify:
 ```
 SELECT table_name, table_type, engine
@@ -54,25 +56,41 @@ ORDER BY table_name;
 ```
 
 ### Results expected
-InnoDB seems to have many of the features we learned about or used in Postgres. In InnoDB, clustered indexes are implemented when specifying the primary-key whereas MyISAM only has unclustered indexes. Having it means the data is stored in primary-key sorted order which would decrease I/O when rows are processed sequentially. Although, in these tests, the biggest difference could be the result of InnoDB's row-level locking vs. MyISAM's table-level locking. For these reasons, InnoDB should perform magnitudes better than MyISAM.
+InnoDB seems to have many of the features we learned about or used in Postgres. In InnoDB, clustered indexes are implemented when specifying the primary-key whereas MyISAM only has unclustered indexes. Having it means the data is stored in primary-key sorted order which would decrease I/O when rows are processed sequentially. Although, in these tests, the biggest difference would be the result of InnoDB's row-level locking vs. MyISAM's table-level locking. InnoDB should perform magnitudes better than MyISAM.
 
 
 ## Performance Experiment Design 2
 
-### Performance issue test: the 10% rule of thumb
+### Performance issue test
+Improvement when enabling Index Condition Pushdown in an InnoDB table with a secondary index. The `WHERE` condition will use the secondary index and check the second `WHERE` condition before returning the full row. The docs say enabling ICP should reduce execution time.
 
 ### Data sets included in the test 
+TENKTUP1 with its original primary-key (and clustered index) but now add a secondary index on tenPercent.
 
 ### Queries we will run
+`CREATE INDEX tenPercent_index ON TENKTUP1 (tenPercent)`
+To verify index: `ANALYZE TABLE`
+```
+SELECT * FROM TENKTUP1
+WHERE tenPercent = 0
+AND ten = 0
+```
+Get `query_id` from `SHOW PROFILES;`
+Get query time from `SHOW PROFILE FOR QUERY <id>`
 
 ### Parameters used/how parameters will be set/varied?
+Enable profiling to see execution time: `SET profiling = 1;`
+Disable `AUTOCOMMIT`
+
+Disabled run: SET optimizer_switch = 'index_condition_pushdown=off';
+Enabled run: SET optimizer_switch = 'index_condition_pushdown=on';
 
 ### Results expected
+When disabled, the query will do 10% selectivity using the secondary index (retreiving full rows) then filter 10% of those.
+When enabled, the query will use the index to find each "tenPercent == 0" - for each, "use the index tuple to locate and read the full table row."
+Reading only 1 column out of all 16 should mean the enabled option performs better.
 
-.  
-.  
-.  
 ## Lessons Learned/issues encountered
 - The performance_schema engine and table would given a lot more information about execution time but only for systems N1 with 8 or more processors or with very high memory on GCP. We can't afford it. Instead, we have to use the deprecated 'show profiles' which has similar information.
-- From an efficiency perspective, we should turn off autocommit - to avoid unnecessary I/O when issuing large numbers of consecutive INSERT, UPDATE, or DELETE statements. We got some transaction semantics practice. ("Even a SELECT statement opens a transaction, so after running some report or debugging queries in an interactive mysql session, either issue a COMMIT or close the mysql session.)
-- Profiling is set to 'off' with each new session, so we have to turn it on with each new connection.
+- Profiling is set to 'off' with each new connection, so we have to turn it on every time we start a session.
+- We should turn off autocommit to avoid unnecessary I/O when issuing large numbers of consecutive INSERT, UPDATE, or DELETE statements. We got some transaction semantics practice and saw how commiting should be grouped otherwise queries in loops take longer.
