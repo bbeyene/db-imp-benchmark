@@ -34,7 +34,7 @@
 ##  System Research
 
 ### 1. Storage Engines
-According to the official docs, "the choice of a transactional storage engine such as InnoDB or a nontransactional one such as MyISAM can be very important for performance and scalability." By default, the storage engine for new tables is InnoDB. It claims that InnoDB tables "outperform the simpler MyISAM tables, especially for a busy database." MyISAM has a small footprint and does table-level locking which reduces performances (relative to InnoDB) so "it is often used in read-only or read-mostly workloads in Web and data warehousing configurations." InnoDB tables arrange data using primary keys. Each table's primary key used to create a clustered index so that I/O is reduced when using the primary key. InnoDB tables also use "Adaptive Hash Indexing" to make lookups of frequently accessed rows faster (which we also benchmark). The documentation also states, you can create and drop indexes and perform other DDL operations with much less impact on performance and availability." InnoDB tables were "designed for CPU efficiency and maximum performance when processing large data volumes".
+According to the official docs, "the choice of a transactional storage engine such as InnoDB or a nontransactional one such as MyISAM can be very important for performance and scalability." By default, the storage engine for new tables is InnoDB. It claims that InnoDB tables "outperform the simpler MyISAM tables, especially for a busy database." MyISAM has a small footprint and does table-level locking which reduces performances (relative to InnoDB) so "it is often used in read-only or read-mostly workloads in Web and data warehousing configurations." InnoDB tables arrange data using primary key. Each table's primary key is used to create a clustered index so that I/O is reduced when when accessing data sequentially. InnoDB tables also use "Adaptive Hash Indexing" to make lookups of frequently accessed rows faster (which we will benchmark as well). The documentation also states you can create and drop indexes and perform other DDL operations with much less impact on performance and availability." InnoDB tables were "designed for CPU efficiency and maximum performance when processing large data volumes".
 
 Truncated Table 16.1 from MySQL docs: Storage Engines Features 
 | Feature | MyISAM | InnoDB |
@@ -50,7 +50,7 @@ Truncated Table 16.1 from MySQL docs: Storage Engines Features
 | Transactions | No | Yes |
 
 ### 2. Index Condition Pushdown
-The most frequently used storage engine is InnoDB - when a primary-key is specified, rows are inserted ordered according to the primary-key and a clustered index is created and entire rows can be read in quickly. Index Condition Pushdown (ICP) is an optimization setting that can be toggled for use when a secondary index is created. If it is toggled off, "the storage engine traverses the (secondary) index to locate rows" and "returns them to the MySQL server which evaluates the WHERE condition for the rows." If enabled, and the WHERE condition in the query only needs the indexed column, then it can push it to the storage engine which evaluates the condition using the index entry "and only if this is satisfied is the row read from the table." This makes queries that use only the secondary index column more performant.
+The most frequently used storage engine is InnoDB - when a primary-key is specified, rows are inserted ordered according to the primary-key and a clustered index is created so that entire rows can be read in quickly. _Index Condition Pushdown_ (ICP) is an optimization setting that can be toggled when a secondary index is created. If it is off, "the storage engine traverses the (secondary) index to locate rows" and "returns them to the MySQL server which evaluates the WHERE condition for the rows." If enabled, and the WHERE condition in the query only needs the secondary indexed column, then it can push it to the storage engine which evaluates the condition using the index entry "and only if this is satisfied is the row read from the table." This is supposed to make queries that use the secondary indexed column along with other columns to be retrieved more performant.
 
 ### 3.
 
@@ -77,13 +77,13 @@ WHERE tenPercent = 0
 UPDATE ONEMTUP
 SET string4 = 'x' where tenPercent = 0
 ```
-Get `query_id` from `SHOW PROFILES;`
+Get `query_id` from `SHOW PROFILES;`  
 Get query time from `SHOW PROFILE FOR QUERY <id>`
 
 ### Parameters Set/Varied
-Enable profiling to see execution time: `SET profiling = 1;`
-Disable `AUTOCOMMIT`
-The command `SHOW ENGINES` tells us that the default engine is InnoDB, so to use other engines - we must specify explicitly. We'll create two tables: `CREATE TABLE ... ENGINE=InnoDB` and `CREATE TABLE ... ENGINE=MYISAM`
+Enable profiling to see execution time: `SET profiling = 1;`  
+Disable `AUTOCOMMIT`  
+The command `SHOW ENGINES` tells us that the default engine is InnoDB, so to use other engines - we must specify explicitly. We'll create two tables: `CREATE TABLE ... ENGINE=InnoDB` and `CREATE TABLE ... ENGINE=MYISAM`  
 To verify:
 ```
 SELECT table_name, table_type, engine
@@ -99,33 +99,35 @@ InnoDB seems to have many of the features we learned about or used in Postgres. 
 ## Performance Experiment Design 2
 
 ### Performance Issue Test
-Improvement when enabling Index Condition Pushdown in an InnoDB table with a secondary index. The `WHERE` condition will use the secondary index and check the second `WHERE` condition before returning the full row. The docs say enabling ICP should reduce execution time.
+Comparing Index Condition Pushdown enabled/disabled in an InnoDB table with a secondary index. A `WHERE` condition that uses the secondary index, and a second `WHERE` condition that can't use the index by itself. The 'adaptive hash index' must be disabled so it doesn't cache the tuple (since we will run the query multiple times).
 
 ### Datasets
-ONEMTUP with its original primary-key (and clustered index) but now add a secondary index on tenPercent.
+TENMTUP with its original primary-key and a clustered index on the `stringu1` column.
 
 ### Queries
-`CREATE INDEX tenPercent_index ON ONEMTUP (tenPercent)`
-To verify index: `ANALYZE TABLE`
+`CREATE INDEX design2_index ON TENMTUP(unique1, stringu1)`
+To verify index: `SHOW INDEXES FROM TENMTUP;`
 ```
-SELECT * FROM ONEMTUP
-WHERE tenPercent = 0
-AND ten = 0
+SELECT count(*) FROM TENMTUP
+WHERE fiftyPercent = 0 
+AND stringu1 like '%SHDA%'
+AND string4 like 'OOOO%';
 ```
-Get `query_id` from `SHOW PROFILES;`
+Get `query_id` from `SHOW PROFILES;`  
 Get query time from `SHOW PROFILE FOR QUERY <id>`
 
 ### Prameters Set/Varied
-Enable profiling to see execution time: `SET profiling = 1;`
+Disable `innodb_adaptive_hash_index`  
+Enable profiling to see execution time: `SET profiling = 1;`  
 Disable `AUTOCOMMIT`
 
-Disabled run: SET optimizer_switch = 'index_condition_pushdown=off';
-Enabled run: SET optimizer_switch = 'index_condition_pushdown=on';
+Disabled run: `SET optimizer_switch = 'index_condition_pushdown=off';`  
+Enabled run: `SET optimizer_switch = 'index_condition_pushdown=on';`
 
 ### Results Expected
-When disabled, the query will do 10% selectivity using the secondary index (retreiving full rows) then filter 10% of those.
-When enabled, the query will use the index to find each "tenPercent == 0" - for each, "use the index tuple to locate and read the full table row."
-Reading only 1 column out of all 16 should mean the enabled option performs better.
+When enabled, the query will get a `stringu1 like '%SHDA%'` tuple from the index - for each, read the full row, then check the `string4 like 'OOOO%` condition, then return those rows.
+When disabled, the query will use the secondary index to find `stringu1 like '%SHDA%'` and retreive full rows back to the server, then filter through them to find `string4 like 'OOOO%'`
+Reading only 1 column instead of 16 should mean the enabled option performs better.
 
 ## Performance Experiment Design 3
 ### Performance Issue Test
@@ -144,5 +146,5 @@ Reading only 1 column out of all 16 should mean the enabled option performs bett
 - The performance_schema engine and table would given a lot more information about execution time but only for systems N1 with 8 or more processors or with very high memory on GCP. We can't afford it. Instead, we have to use the deprecated 'show profiles' which has similar information.
 - Profiling is set to 'off' with each new connection, so we have to turn it on every time we start a session.
 - We should turn off autocommit to avoid unnecessary I/O when issuing large numbers of consecutive INSERT, UPDATE, or DELETE statements. We got some transaction semantics practice and saw how commiting should be grouped otherwise queries in loops take longer.
-- While trying to insert a one-million row table, our script would time-out. We changed various timeout settings and packet sizez in GCP but still had problems, so we used GCP's import CSV from a bucket option. 
+- While trying to insert a one-million row table, our script would time-out. We changed various timeout settings and packet sizes in GCP but still had problems, so we used GCP's import CSV from a bucket option.   
 ![Import from Bucket](./screenshots/bucket_import.png)
