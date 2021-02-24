@@ -210,8 +210,8 @@ Observing the performance of the Adaptive Hash Index
 ### Datasets
 
 TENMTUP
-1MTUP
-1MTUP
+ONEMTUP
+ONEMTUP
 
 ### Queries
 
@@ -227,7 +227,7 @@ WHERE A.twenty = B.ten
 
 ```
 SELECT count(*)
-FROM TENMTUP A, 1MTUP B, 1MTUP C
+FROM TENMTUP A, ONEMTUP B, ONEMTUP C
 WHERE (A.twenty = B.ten) AND (C.twenty = B.ten)
 ```
 
