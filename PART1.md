@@ -67,3 +67,5 @@ I ended up wracking my brain trying to figure out how to implement the algorithm
 Luckily I met with Bruh the next day. He pointed out the updated string format - (7 letters [A-Z] followed by 45 x's) and generation pattern.
 
 Long story short: read the whole document before you program!
+
+We also learned some python semantics to transform our benchmark data insertion to be more efficient - `using executemany()` of the python-mysql driver. We reduced the insert time since packet sizes could be larger and `commit`s wouldn't be necessary until the batch was inserted or the database decided to flush to disk.
