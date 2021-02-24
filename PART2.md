@@ -1,35 +1,35 @@
 # Part II<!-- omit in toc -->
 
 - [System Research](#system-research)
-  - [1. Storage Engines](#1-storage-engines)
-  - [2. Index Condition Pushdown](#2-index-condition-pushdown)
-  - [3.](#3)
-  - [4.](#4)
-  - [5.](#5)
+	- [1. Storage Engines](#1-storage-engines)
+	- [2. Index Condition Pushdown](#2-index-condition-pushdown)
+	- [3. Hash Join Buffer Size](#3-hash-join-buffer-size)
+	- [4. Adaptive Hash Index](#4-adaptive-hash-index)
+	- [5. Adaptive Hash Index - Partitions](#5-adaptive-hash-index---partitions)
 - [Performance Experiment Design 1](#performance-experiment-design-1)
-  - [Performance Issue Test](#performance-issue-test)
-  - [Datasets](#datasets)
-  - [Queries](#queries)
-  - [Parameters Set/Varied](#parameters-setvaried)
-  - [Results Expected](#results-expected)
+	- [Performance Issue Test](#performance-issue-test)
+	- [Datasets](#datasets)
+	- [Queries](#queries)
+	- [Parameters Set/Varied](#parameters-setvaried)
+	- [Results Expected](#results-expected)
 - [Performance Experiment Design 2](#performance-experiment-design-2)
-  - [Performance Issue Test](#performance-issue-test-1)
-  - [Datasets](#datasets-1)
-  - [Queries](#queries-1)
-  - [Prameters Set/Varied](#prameters-setvaried)
-  - [Results Expected](#results-expected-1)
+	- [Performance Issue Test](#performance-issue-test-1)
+	- [Datasets](#datasets-1)
+	- [Queries](#queries-1)
+	- [Prameters Set/Varied](#prameters-setvaried)
+	- [Results Expected](#results-expected-1)
 - [Performance Experiment Design 3](#performance-experiment-design-3)
-  - [Performance Issue Test](#performance-issue-test-2)
-  - [Datasets](#datasets-2)
-  - [Queries](#queries-2)
-  - [Parameters Set/Varied](#parameters-setvaried-1)
-  - [Results Expected](#results-expected-2)
+	- [Performance Issue Test](#performance-issue-test-2)
+	- [Datasets](#datasets-2)
+	- [Queries](#queries-2)
+	- [Parameters Set/Varied](#parameters-setvaried-1)
+	- [Results Expected](#results-expected-2)
 - [Performance Experiment Design 4](#performance-experiment-design-4)
-  - [Performance Issue Test](#performance-issue-test-3)
-  - [Datasets](#datasets-3)
-  - [Queries](#queries-3)
-  - [Parameters Set/Varied](#parameters-setvaried-2)
-  - [Results Expected](#results-expected-3)
+	- [Performance Issue Test](#performance-issue-test-3)
+	- [Datasets](#datasets-3)
+	- [Queries](#queries-3)
+	- [Parameters Set/Varied](#parameters-setvaried-2)
+	- [Results Expected](#results-expected-3)
 - [Lessons Learned/Issues Encountered](#lessons-learnedissues-encountered)
 
 ## System Research
@@ -55,7 +55,8 @@ Truncated Table 16.1 from MySQL docs: Storage Engines Features
 
 The most frequently used storage engine is InnoDB - when a primary-key is specified, rows are inserted ordered according to the primary-key and a clustered index is created so that entire rows can be read in quickly. _Index Condition Pushdown_ (ICP) is an optimization setting that can be toggled when a secondary index is created. If it is off, "the storage engine traverses the (secondary) index to locate rows" and "returns them to the MySQL server which evaluates the WHERE condition for the rows." If enabled, and the WHERE condition in the query only needs the secondary indexed column, then it can push it to the storage engine which evaluates the condition using the index entry "and only if this is satisfied is the row read from the table." This is supposed to make queries that use the secondary indexed column along with other columns to be retrieved more performant.
 
-### 3.
+### 3. Hash Join Buffer Size
+In our one-on-one meeting with Dr. Tufte, she had mentioned MySQL isn't as advanced as Postgres and this is evident in the algorithms for joins -  "Beginning with MySQL 8.0.20, support for block nested loop is removed, and the server employs a hash join wherever a block nested loop would have been used previously." A hash join is used for joins using at least one equi-join condition and is supposed to be faster than block nested loops. Previous versions could have it toggeled on/off but the current version defaults to using hash joins and can't be turned off. What we can vary is the memory used by hash joins. It is set by the 'join_buffer_size' system variable - such that it can't use more than this amount. If the memory needed for the join is greater, it is handled by spilling over to files on disk (we might run into a "too many open files" error so we may also have to set 'open_files_limit' higher). The docs add that if the buffer size is set higher than needed for a query - it will allocate the amount that it actually will need.
 
 ### 4. Adaptive Hash Index
 
@@ -149,7 +150,6 @@ Get `query_id` from `SHOW PROFILES;`
 Get query time from `SHOW PROFILE FOR QUERY <id>`
 
 ### Prameters Set/Varied
-
 Disable `innodb_adaptive_hash_index`  
 Enable profiling to see execution time: `SET profiling = 1;`  
 Disable `AUTOCOMMIT`
@@ -164,16 +164,28 @@ When disabled, the query will use the secondary index to find `stringu1 like '%S
 Reading only 1 column instead of 16 should mean the enabled option performs better.
 
 ## Performance Experiment Design 3
-
 ### Performance Issue Test
+Increase/decrease the `join_buffer_size` (our working memory for joins). The default value `join_buffer_size` is 262144. (I think that mean 262144 / 8 = 32768 bytes = 32MB)
 
 ### Datasets
-
+Two identical tables with one million tuples each: `TENMTUP` and `TENMTUPTOO`  
 ### Queries
-
+An equi-join condition using the `ten` column from each table:
+```
+EXPLAIN SELECT count(*) FROM TENMTUP
+JOIN TENMTUPTOO ON (TENMTUP.ten = TENMTUPTOO.ten);
+```
+... should tell us it is using hash join.
+```
+SELECT count(*) FROM TENMTUP
+JOIN TENMTUPTOO ON (TENMTUP.ten = TENMTUPTOO.ten);
+```
 ### Parameters Set/Varied
-
+In GCP, edit the configuration flags: `join_buffer_size` = 1024 (1 KB)  
+In GCP, edit the configuration flags: `join_buffer_size` = 524288 (64 MB)  
+In GCP, edit the configuration flags: `join_buffer_size` = 8388608 (1 GB)
 ### Results Expected
+Setting the size too small will increase execution time because it will overflow into the disk where I/O is much more time consuming. Setting it too high should have no affects since the query will eventually only allocate the amount that it needs since the query will eventually only allocate the amount that it needs.
 
 ## Performance Experiment Design 4
 
