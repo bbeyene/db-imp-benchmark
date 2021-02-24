@@ -71,6 +71,10 @@ Using the Adaptive Hash Index feature can either significantly improve a system'
 
 ### 5. Adaptive Hash Index - Partitions
 
+By default, the Adaptive Hash Index feature has 8 partitions. The partitions be increased to a maximum of 512. This setting is done by modifying the value of the `innodb_adaptive_hash_index_parts` variable.
+
+Having many partitions benefit systems that have many concurrent processes going on. Additionally, given the same situation, there may be a benefit in disabling the Adaptive Hash Index completely.
+
 ## Performance Experiment Design 1
 
 ### Performance Issue Test
