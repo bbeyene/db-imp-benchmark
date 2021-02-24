@@ -148,7 +148,7 @@ AND string4 like 'OOOO%';
 Get `query_id` from `SHOW PROFILES;`  
 Get query time from `SHOW PROFILE FOR QUERY <id>`
 
-### Prameters Set/Varied
+### Parameters Set/Varied
 
 Disable `innodb_adaptive_hash_index`  
 Enable profiling to see execution time: `SET profiling = 1;`  
@@ -179,13 +179,62 @@ Reading only 1 column instead of 16 should mean the enabled option performs bett
 
 ### Performance Issue Test
 
+Observing the performance of the Adaptive Hash Index
+
 ### Datasets
+
+TENMTUP
+1MTUP
+1MTUP
 
 ### Queries
 
+(Joining 2 Tables)
+
+```
+SELECT count(*)
+FROM TENMTUP A, TENMTUP B
+WHERE A.twenty = B.ten
+```
+
+(Joining 3 Tables)
+
+```
+SELECT count(*)
+FROM TENMTUP A, 1MTUP B, 1MTUP C
+WHERE (A.twenty = B.ten) AND (C.twenty = B.ten)
+```
+
+(Query that uses a range)
+
+```
+SELECT count(*)
+FROM TENMTUP T
+WHERE  T.twenty < 15
+```
+
 ### Parameters Set/Varied
 
+Adaptive Hash Indexing is modified via the variable `innodb_adaptive_hash_index`
+
+Setting the variable to `on` enables Adaptive Hash Indexing
+Setting the variable to `off` disables Adaptive Hash Indexing
+
 ### Results Expected
+
+Query 1
+
+The system should performance better with adaptive hash indexing turned on. Turned off, the system should perform slower. It is a single join that should fit in memory.
+
+The query benefits from memory speed and hash speed.
+
+Query 2
+
+The system should perform slower with adaptive hash indexing turned on. Joining three tables increases the size of the data. This should provide enough workload to see a decrease in performance speed.
+
+Query 3
+
+The system should perform slower with adaptive hash indexing turned on. Hash Indexing does not work well when using a range operator such as `<`.
 
 ## Lessons Learned/Issues Encountered
 
