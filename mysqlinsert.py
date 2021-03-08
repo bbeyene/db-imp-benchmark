@@ -22,7 +22,7 @@ def use_database(name, connection):
         use_db_query = f"USE {name}"
         cursor.execute(use_db_query)
 
-def create_table(name, connection):
+def create_table(name, engine, connection):
     with connection.cursor() as cursor:
         create_table_query = f"""
         CREATE TABLE {name} (
@@ -42,7 +42,7 @@ def create_table(name, connection):
         stringu1 CHAR(52) NOT NULL,
         stringu2 CHAR(52) NOT NULL,
         string4 CHAR(52) NOT NULL
-        ) """
+        ) ENGINE={engine}"""
         cursor.execute(create_table_query)
         connection.commit()
 
@@ -72,14 +72,17 @@ if __name__ == "__main__":
     # https://realpython.com/python-mysql/
     try:
         with connect(
-            host='', # gcp sql instance ip
+            host='localhost', # gcp sql instance ip
             user='root',
             password=getpass("password: "),
         ) as connection:
-            #create_database('Benchmark', connection)
-            use_database('Benchmark', connection)
-            create_table('TENKTUP2', connection)
-            insert_csv('TENKTUP2', filename, connection)
+            create_database('innoDB', connection)
+            use_database('innoDB', connection)
+            create_table('ONEMTUP', 'InnoDB', connection)
+
+            create_database('myisam', connection)
+            use_database('myisam', connection)
+            create_table('ONEMTUP', 'MyISAM', connection)
     except Error as e:
         print(e)
 
