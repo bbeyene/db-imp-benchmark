@@ -52,15 +52,23 @@ def insert_csv(table, filename, connection):
             csv_data = csv.reader(csv_file)
             next(csv_data, None)  # skip the headers
             list_data = []
+
             for row in csv_data:
                 list_data.append(tuple(row))
+            length = len(list_data)
+            chunk = length / 100 # 10k for ONEMTUP
 
-            query = f"INSERT INTO {table}(unique1,unique2,two,four,ten,twenty,onePercent,tenPercent,twentyPercent,fiftyPercent,\
-                    unique3,evenOnePercent,oddOnePercent,stringu1,stringu2,string4) \
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            i = 0
+            while(i < 100):
+                query = f"INSERT INTO {table}(unique1,unique2,two,four,ten,twenty,onePercent,tenPercent,twentyPercent,fiftyPercent,\
+                        unique3,evenOnePercent,oddOnePercent,stringu1,stringu2,string4) \
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-            cursor.executemany(query, list_data)
-            connection.commit()
+                start = int(i * chunk + 0)
+                stop = int(i * chunk + 10000)
+                cursor.executemany(query, list_data[start:stop])
+                connection.commit()
+                i += 1
 
 if __name__ == "__main__":
     if len(argv) < 2:
@@ -73,16 +81,18 @@ if __name__ == "__main__":
     try:
         with connect(
             host='localhost', # gcp sql instance ip
-            user='root',
-            password=getpass("password: "),
+            user='root'
+            #password=getpass("password: "),
         ) as connection:
-            create_database('innoDB', connection)
-            use_database('innoDB', connection)
-            create_table('ONEMTUP', 'InnoDB', connection)
+            #create_database('innoDB', connection)
+            #use_database('innoDB', connection)
+            #create_table('ONEMTUP', 'InnoDB', connection)
 
-            create_database('myisam', connection)
+            #create_database('myisam', connection)
             use_database('myisam', connection)
-            create_table('ONEMTUP', 'MyISAM', connection)
+            #create_table('ONEMTUP', 'MyISAM', connection)
+
+            insert_csv('ONEMTUP', filename, connection)
     except Error as e:
         print(e)
 
